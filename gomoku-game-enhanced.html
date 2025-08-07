@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五子棋中文词语比赛</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Comic Sans MS', 'Microsoft YaHei', sans-serif;
+            text-align: center;
+            background-color: #f9f7f7;
+            padding: 10px;
+            margin: 0;
+            overflow: auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .game-container {
+            max-width: 100%;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        h1 {
+            color: #ff85a2;
+            margin: 10px 0;
+            font-size: min(8vw, 48px);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .settings-group {
+            margin: 15px 0;
+            padding: 0 10px;
+        }
+        .custom-words, .timer-setting {
+            margin-bottom: 15px;
+        }
+        .settings-group label {
+            display: block;
+            color: #666;
+            font-size: min(4vw, 16px);
+            margin-bottom: 5px;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .custom-words input, .timer-setting input {
+            width: 100%;
+            max-width: 600px;
+            padding: 12px 15px;
+            border: 2px solid #e8c4c4;
+            border-radius: 50px;
+            font-size: min(4vw, 18px);
+            outline: none;
+            transition: all 0.3s;
+        }
+        .custom-words input:focus, .timer-setting input:focus {
+            border-color: #ff9a9e;
+            box-shadow: 0 0 0 3px rgba(255,154,158,0.2);
+        }
+        .custom-words p, .timer-setting p {
+            color: #666;
+            font-size: min(3.5vw, 14px);
+            margin: 5px 0 0 0;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .start-options {
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .start-btn {
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: none;
+            font-size: min(5vw, 20px);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        .start-btn:hover {
+            transform: scale(1.05);
+        }
+        .team1-start {
+            background: linear-gradient(135deg, #ffd5cd, #ff9a9e);
+            color: #ff6b6b;
+        }
+        .team2-start {
+            background: linear-gradient(135deg, #d0e6ff, #a1c4fd);
+            color: #4d96ff;
+        }
+        .current-word-container {
+            background-color: #fffacd;
+            border-radius: 15px;
+            padding: 10px;
+            margin: 10px auto;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .current-word {
+            font-size: min(12vw, 72px);
+            color: #2f4f4f;
+            min-height: 1.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            padding: 10px;
+            word-break: break-all;
+        }
+        /* 倒计时样式 */
+        .timer-container {
+            position: absolute;
+            top: -15px;
+            right: 20px;
+        }
+        .timer-circle {
+            width: min(12vw, 60px);
+            height: min(12vw, 60px);
+            position: relative;
+        }
+        .timer-progress {
+            fill: none;
+            stroke-width: 6;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+        }
+        .timer-background {
+            fill: none;
+            stroke-width: 6;
+            stroke: #f0f0f0;
+        }
+        .timer-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: min(5vw, 24px);
+            font-weight: bold;
+            color: #000000; /* 倒计时中心数字改为黑色 */
+            text-shadow: 0 1px 2px rgba(255,255,255,0.5); /* 增加白色阴影提高可读性 */
+        }
+        .team-indicator {
+            font-size: min(5vw, 28px);
+            margin: 10px 0;
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: inline-block;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        .team1-indicator {
+            background: linear-gradient(135deg, #ffd5cd, #ff9a9e);
+            color: #ff6b6b;
+        }
+        .team2-indicator {
+            background: linear-gradient(135deg, #d0e6ff, #a1c4fd);
+            color: #4d96ff;
+        }
+        .board-container {
+            margin: 10px auto;
+            max-width: 100%;
+            overflow: auto;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(15, min(6vw, 50px));
+            grid-template-rows: repeat(15, min(6vw, 50px));
+            gap: 2px;
+            background-color: #f5e6ca;
+            border: 4px solid #e8c4c4;
+            border-radius: 10px;
+            padding: 5px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+            margin: 0 auto;
+        }
+        .cell {
+            width: 100%;
+            height: 100%;
+            background-color: #fff9f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .cell:hover {
+            background-color: #fff0e0;
+            transform: scale(0.95);
+        }
+        .piece {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        .team1-piece {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            border: 2px solid #ff6b6b;
+        }
+        .team2-piece {
+            background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+            border: 2px solid #4d96ff;
+        }
+        .controls {
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: min(3vw, 20px);
+        }
+        .control-btn {
+            width: min(15vw, 80px);
+            height: min(15vw, 80px);
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a8edea, #fed6e3);
+            color: white;
+            border: none;
+            font-size: min(6vw, 28px);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .control-btn:hover {
+            transform: scale(1.1) rotate(10deg);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        .control-btn:disabled {
+            background: #e0e0e0;
+            cursor: not-allowed;
+            transform: none;
+            color: #b0b0b0;
+        }
+        #correctBtn {
+            background: linear-gradient(135deg, #a1ffce, #faffd1);
+            color: #4CAF50;
+        }
+        #wrongBtn {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            color: #ff6b6b;
+        }
+        #nextBtn {
+            background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+            color: #4d96ff;
+        }
+        #resetBtn {
+            background: linear-gradient(135deg, #ffc3a0, #ffafbd);
+            color: #ff6b6b;
+        }
+        
+        /* 大屏幕烟花效果 */
+        .firework {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            box-shadow: 0 0 20px 5px;
+            animation: firework-animation 2s ease-out;
+            opacity: 0;
+            z-index: 100;
+        }
+        
+        @keyframes firework-animation {
+            0% {
+                transform: translate(var(--x), var(--y)) scale(0);
+                opacity: 1;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--x-end), var(--y-end)) scale(1.5);
+                opacity: 0;
+            }
+        }
+        
+        .win-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: min(8vw, 60px);
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 15px #000;
+            z-index: 200;
+            animation: zoomIn 0.5s, float 3s ease-in-out infinite;
+            padding: 20px 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 90%;
+        }
+        
+        @keyframes zoomIn {
+            from {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translate(-50%, -50%) translateY(0);
+            }
+            50% {
+                transform: translate(-50%, -50%) translateY(-20px);
+            }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .timeout-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: min(6vw, 40px);
+            font-weight: bold;
+            color: white;
+            background-color: rgba(255, 69, 0, 0.9);
+            padding: 20px 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            z-index: 150;
+            animation: fadeInOut 2s;
+        }
+        
+        @keyframes fadeInOut {
+            0%, 100% {
+                opacity: 0;
+            }
+            20%, 80% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🌈 五子棋中文词语比赛 🌈</h1>
+        
+        <div id="startScreen">
+            <div class="settings-group">
+                <div class="custom-words">
+                    <label for="customWordsInput">自定义词语</label>
+                    <input type="text" id="customWordsInput" placeholder="输入自定义词语，用空格分隔（可选）">
+                    <p>提示：如果不输入，将使用默认词语库</p>
+                </div>
+                <div class="timer-setting">
+                    <label for="timerInput">倒计时设置（秒）</label>
+                    <input type="number" id="timerInput" min="1" max="60" value="10">
+                    <p>提示：请输入1-60之间的数字，设置每个词语的思考时间</p>
+                </div>
+            </div>
+            <div class="start-options">
+                <button class="start-btn team1-start" id="team1StartBtn">红队先手</button>
+                <button class="start-btn team2-start" id="team2StartBtn">蓝队先手</button>
+            </div>
+        </div>
+        
+        <div id="gameScreen" class="hidden">
+            <div class="team-indicator" id="teamIndicator"></div>
+            
+            <div class="current-word-container">
+                <div class="timer-container">
+                    <svg class="timer-circle" viewBox="0 0 100 100">
+                        <circle class="timer-background" cx="50" cy="50" r="40"></circle>
+                        <circle class="timer-progress" cx="50" cy="50" r="40" 
+                                stroke="#ff3366" stroke-dasharray="251.2" stroke-dashoffset="0"></circle>
+                    </svg>
+                    <div class="timer-text" id="timer">10</div>
+                </div>
+                <div class="current-word" id="currentWord"></div>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" id="correctBtn" title="正确"><i class="fas fa-check"></i></button>
+                <button class="control-btn" id="wrongBtn" title="错误"><i class="fas fa-times"></i></button>
+                <button class="control-btn" id="nextBtn" title="下一个词"><i class="fas fa-forward"></i></button>
+                <button class="control-btn" id="resetBtn" title="重新开始"><i class="fas fa-redo"></i></button>
+            </div>
+            
+            <div class="board-container">
+                <div class="board" id="board"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 默认词语库
+        const defaultWords = [
+            "运动", "游泳", "喜欢", "踢足球", "打篮球", 
+            "去", "走", "忙", "对不起", "没关系", 
+            "请问", "最", "国家", "外语", "法语", 
+            "得", "哪里", "说", "会", "汉语"
+        ];
+        
+        let words = [...defaultWords]; // 当前使用的词语库
+        let usedWords = [];
+        let currentWord = "";
+        let currentTeam = 1; // 1 for team1, 2 for team2
+        let board = Array(15).fill().map(() => Array(15).fill(0)); // 0 empty, 1 team1, 2 team2
+        let gameOver = false;
+        let consecutiveFails = 0; // 记录连续失败的次数
+        const maxConsecutiveFails = 2; // 最大连续失败次数后换词
+        let timer;
+        let timeLeft = 10;
+        let timerDuration = 10; // 倒计时时长，默认10秒
+        
+        // DOM元素
+        const startScreen = document.getElementById("startScreen");
+        const gameScreen = document.getElementById("gameScreen");
+        const team1StartBtn = document.getElementById("team1StartBtn");
+        const team2StartBtn = document.getElementById("team2StartBtn");
+        const currentWordEl = document.getElementById("currentWord");
+        const teamIndicatorEl = document.getElementById("teamIndicator");
+        const timerEl = document.getElementById("timer");
+        const timerProgressEl = document.querySelector(".timer-progress");
+        const correctBtn = document.getElementById("correctBtn");
+        const wrongBtn = document.getElementById("wrongBtn");
+        const nextBtn = document.getElementById("nextBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const boardEl = document.getElementById("board");
+        const customWordsInput = document.getElementById("customWordsInput");
+        const timerInput = document.getElementById("timerInput");
+        
+        // 计算圆的周长（用于进度条）
+        const circleCircumference = 2 * Math.PI * 40; // r=40
+        
+        // 创建烟花效果
+        function createFireworks(count, color) {
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const firework = document.createElement("div");
+                    firework.className = "firework";
+                    firework.style.color = color;
+                    
+                    // 随机起始位置
+                    const startX = Math.random() * window.innerWidth;
+                    const startY = Math.random() * window.innerHeight;
+                    
+                    // 随机结束位置
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 100 + Math.random() * 200;
+                    const endX = startX + Math.cos(angle) * distance;
+                    const endY = startY + Math.sin(angle) * distance;
+                    
+                    firework.style.setProperty("--x", `${startX}px`);
+                    firework.style.setProperty("--y", `${startY}px`);
+                    firework.style.setProperty("--x-end", `${endX - startX}px`);
+                    firework.style.setProperty("--y-end", `${endY - startY}px`);
+                    
+                    document.body.appendChild(firework);
+                    
+                    // 动画结束后移除元素
+                    setTimeout(() => {
+                        firework.remove();
+                    }, 2000);
+                }, i * 100);
+            }
+        }
+        
+        // 显示获胜消息和烟花
+        function showWinMessage(team) {
+            const teamName = team === 1 ? "红队" : "蓝队";
+            const teamColor = team === 1 ? "#ff6b6b" : "#4d96ff";
+            
+            const winMessage = document.createElement("div");
+            winMessage.className = "win-message";
+            winMessage.textContent = `🎉 恭喜 ${teamName} 获胜！ 🎉`;
+            winMessage.style.background = team === 1 
+                ? "linear-gradient(135deg, rgba(255,107,107,0.8), rgba(255,154,158,0.8))" 
+                : "linear-gradient(135deg, rgba(77,150,255,0.8), rgba(161,196,253,0.8))";
+            document.body.appendChild(winMessage);
+            
+            // 创建烟花
+            createFireworks(30, teamColor);
+            
+            // 3秒后移除消息
+            setTimeout(() => {
+                winMessage.remove();
+            }, 3000);
+        }
+        
+        // 显示超时消息
+        function showTimeoutMessage() {
+            const timeoutMessage = document.createElement("div");
+            timeoutMessage.className = "timeout-message";
+            timeoutMessage.textContent = "时间到！";
+            document.body.appendChild(timeoutMessage);
+            
+            // 2秒后移除消息
+            setTimeout(() => {
+                timeoutMessage.remove();
+            }, 2000);
+        }
+        
+        // 开始倒计时
+        function startTimer() {
+            clearInterval(timer);
+            timeLeft = timerDuration;
+            updateTimerDisplay();
+            
+            // 设置进度条初始状态
+            timerProgressEl.style.strokeDasharray = circleCircumference;
+            timerProgressEl.style.strokeDashoffset = 0;
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    showTimeoutMessage();
+                    handleTimeout();
+                }
+            }, 1000);
+        }
+        
+        // 更新计时器显示
+        function updateTimerDisplay() {
+            timerEl.textContent = timeLeft;
+            
+            // 更新进度条
+            const progress = timeLeft / timerDuration;
+            const offset = circleCircumference * (1 - progress);
+            timerProgressEl.style.strokeDashoffset = offset;
+            
+            // 根据剩余时间改变鲜亮颜色
+            if (timeLeft <= timerDuration / 3) {
+                // 时间较少时使用鲜亮红色
+                timerProgressEl.style.stroke = "#ff3333";
+            } else if (timeLeft <= timerDuration * 2 / 3) {
+                // 时间中等时使用鲜亮橙色
+                timerProgressEl.style.stroke = "#ff9900";
+            } else {
+                // 时间充足时使用鲜亮粉色
+                timerProgressEl.style.stroke = "#ff3366";
+            }
+        }
+        
+        // 处理超时
+        function handleTimeout() {
+            // 超时后相当于认读错误
+            consecutiveFails++;
+            
+            // 如果两队都超时了这个词语，自动换一个新词
+            if (consecutiveFails >= maxConsecutiveFails) {
+                consecutiveFails = 0;
+                usedWords.push(currentWord); // 标记当前词为已使用
+                showNextWord();
+                currentWordEl.textContent = `新词: ${currentWord}`;
+                return;
+            }
+            
+            switchTeam();
+            currentWordEl.textContent = `轮到 ${currentTeam === 1 ? "🎈 红队" : "🎈 蓝队"} 读: ${currentWord}`;
+        }
+        
+        // 初始化棋盘
+        function initBoard() {
+            boardEl.innerHTML = "";
+            for (let i = 0; i < 15; i++) {
+                for (let j = 0; j < 15; j++) {
+                    const cell = document.createElement("div");
+                    cell.className = "cell";
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.addEventListener("click", () => placePiece(i, j));
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+        
+        // 获取随机词语（循环使用）
+        function getRandomWord() {
+            // 如果所有词语都已使用过，重置usedWords数组
+            if (usedWords.length === words.length) {
+                usedWords = [];
+            }
+            
+            // 从尚未使用的词语中随机选择
+            const availableWords = words.filter(word => !usedWords.includes(word));
+            return availableWords[Math.floor(Math.random() * availableWords.length)];
+        }
+        
+        // 显示下一个词语
+        function showNextWord() {
+            if (gameOver) return;
+            
+            currentWord = getRandomWord();
+            currentWordEl.textContent = currentWord;
+            nextBtn.disabled = true;
+            updateTeamIndicator();
+            startTimer(); // 开始新的倒计时
+        }
+        
+        // 更新队伍指示器
+        function updateTeamIndicator() {
+            if (currentTeam === 1) {
+                teamIndicatorEl.className = "team-indicator team1-indicator";
+                teamIndicatorEl.textContent = "🎈 红队回合";
+            } else {
+                teamIndicatorEl.className = "team-indicator team2-indicator";
+                teamIndicatorEl.textContent = "🎈 蓝队回合";
+            }
+        }
+        
+        // 放置棋子
+        function placePiece(row, col) {
+            if (gameOver || board[row][col] !== 0 || !currentWord) return;
+            
+            // 重置计时器
+            clearInterval(timer);
+            
+            board[row][col] = currentTeam;
+            const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+            const piece = document.createElement("div");
+            piece.className = `piece team${currentTeam}-piece`;
+            
+            // 添加下落动画
+            piece.style.transform = "scale(0)";
+            cell.appendChild(piece);
+            setTimeout(() => {
+                piece.style.transform = "scale(1)";
+            }, 10);
+            
+            // 检查是否获胜
+            if (checkWin(row, col)) {
+                gameOver = true;
+                showWinMessage(currentTeam);
+            }
+            
+            // 标记词语为已使用
+            usedWords.push(currentWord);
+            consecutiveFails = 0; // 重置连续失败计数
+            
+            currentWord = "";
+            currentWordEl.textContent = "✨ 请点击下一个词 ✨";
+            nextBtn.disabled = false;
+        }
+        
+        // 检查是否五子连珠
+        function checkWin(row, col) {
+            const directions = [
+                [0, 1],  // 水平
+                [1, 0],  // 垂直
+                [1, 1],  // 对角线
+                [1, -1]  // 反对角线
+            ];
+            
+            const team = board[row][col];
+            
+            for (const [dx, dy] of directions) {
+                let count = 1;
+                
+                // 正向检查
+                for (let i = 1; i < 5; i++) {
+                    const newRow = row + i * dx;
+                    const newCol = col + i * dy;
+                    if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15 || board[newRow][newCol] !== team) {
+                        break;
+                    }
+                    count++;
+                }
+                
+                // 反向检查
+                for (let i = 1; i < 5; i++) {
+                    const newRow = row - i * dx;
+                    const newCol = col - i * dy;
+                    if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15 || board[newRow][newCol] !== team) {
+                        break;
+                    }
+                    count++;
+                }
+                
+                if (count >= 5) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        // 切换队伍
+        function switchTeam() {
+            currentTeam = currentTeam === 1 ? 2 : 1;
+            updateTeamIndicator();
+            startTimer(); // 切换队伍后开始新的倒计时
+        }
+        
+        // 重置游戏
+        function resetGame() {
+            clearInterval(timer);
+            startScreen.classList.remove("hidden");
+            gameScreen.classList.add("hidden");
+            
+            usedWords = [];
+            currentWord = "";
+            board = Array(15).fill().map(() => Array(15).fill(0));
+            gameOver = false;
+            consecutiveFails = 0;
+            timeLeft = timerDuration;
+            
+            boardEl.innerHTML = "";
+        }
+        
+        // 处理自定义词语
+        function processCustomWords() {
+            const customWords = customWordsInput.value.trim();
+            if (customWords) {
+                // 用空格分割并过滤空字符串
+                const wordsArray = customWords.split(/\s+/).filter(word => word);
+                if (wordsArray.length > 0) {
+                    return wordsArray;
+                }
+            }
+            // 如果没有自定义词语或格式不正确，使用默认词语
+            return [...defaultWords];
+        }
+        
+        // 处理倒计时设置 - 允许更灵活的时间设置
+        function processTimerSetting() {
+            let timerValue = parseInt(timerInput.value, 10);
+            
+            // 确保数值在更宽泛的有效范围内
+            if (isNaN(timerValue) || timerValue < 1) {
+                timerValue = 1;
+            } else if (timerValue > 60) {
+                timerValue = 60;
+            }
+            
+            timerInput.value = timerValue;
+            return timerValue;
+        }
+        
+        // 开始游戏
+        function startGame(startingTeam) {
+            currentTeam = startingTeam;
+            // 处理自定义词语
+            words = processCustomWords();
+            // 处理倒计时设置
+            timerDuration = processTimerSetting();
+            startScreen.classList.add("hidden");
+            gameScreen.classList.remove("hidden");
+            
+            initBoard();
+            updateTeamIndicator();
+            showNextWord();
+        }
+        
+        // 事件监听
+        correctBtn.addEventListener("click", () => {
+            if (!currentWord || gameOver) return;
+            
+            // 读对了，可以下子
+            clearInterval(timer); // 停止计时器
+            consecutiveFails = 0; // 重置连续失败计数
+            document.querySelectorAll(".cell").forEach(cell => {
+                cell.style.cursor = "pointer";
+            });
+            currentWordEl.textContent = `${currentTeam === 1 ? "🎈 红队" : "🎈 蓝队"} 请下子: ${currentWord}`;
+        });
+        
+        wrongBtn.addEventListener("click", () => {
+            if (!currentWord || gameOver) return;
+            
+            clearInterval(timer); // 停止计时器
+            
+            // 读错了，换队
+            consecutiveFails++;
+            
+            // 如果两队都读错了这个词语，自动换一个新词
+            if (consecutiveFails >= maxConsecutiveFails) {
+                consecutiveFails = 0;
+                usedWords.push(currentWord); // 标记当前词为已使用
+                showNextWord();
+                currentWordEl.textContent = `新词: ${currentWord}`;
+                return;
+            }
+            
+            switchTeam();
+            currentWordEl.textContent = `轮到 ${currentTeam === 1 ? "🎈 红队" : "🎈 蓝队"} 读: ${currentWord}`;
+        });
+        
+        nextBtn.addEventListener("click", () => {
+            if (gameOver) return;
+            
+            clearInterval(timer); // 停止计时器
+            switchTeam();
+            showNextWord();
+            document.querySelectorAll(".cell").forEach(cell => {
+                cell.style.cursor = "default";
+            });
+        });
+        
+        resetBtn.addEventListener("click", resetGame);
+        
+        team1StartBtn.addEventListener("click", () => startGame(1));
+        team2StartBtn.addEventListener("click", () => startGame(2));
+        
+        // 限制倒计时输入只能是数字且在1-60之间
+        timerInput.addEventListener("input", () => {
+            let value = timerInput.value;
+            // 移除非数字字符
+            value = value.replace(/[^0-9]/g, '');
+            timerInput.value = value;
+            
+            // 自动调整到有效范围
+            const numValue = parseInt(value, 10);
+            if (!isNaN(numValue)) {
+                if (numValue < 1) timerInput.value = 1;
+                else if (numValue > 60) timerInput.value = 60;
+            }
+        });
+    </script>
+</body>
+</html>
+    
